@@ -139,6 +139,12 @@ paymaster balance on Paymaster 399997220466736865757n
     }
 ```
 
+The recovered address :
+`console.log: 0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266`
+
+The user address (from execute.js) :
+`0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266`
+
 ## HH Compiler settings
 
 ```js

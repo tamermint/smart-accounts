@@ -24,7 +24,7 @@ async function main() {
   /* +
     ; */ //if trying to execute this user op again, you don't need the init code, so put in 0x
 
-  console.log({ sender });
+  // console.log({ sender });
 
   /* await entryPoint.depositTo(PM_ADDRESS, {
     value: await hre.ethers.parseEther("100"),
