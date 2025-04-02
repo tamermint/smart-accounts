@@ -20,28 +20,30 @@ async function main() {
   /* FACTORY_ADDRESS +
     AccountFactory.interface
       .encodeFunctionData("createAccount", [address0])
-      .slice(2); */ //if trying to execute this user op again, you don't need the init code, so put in 0x
+      .slice(2); */
+  /* +
+    ; */ //if trying to execute this user op again, you don't need the init code, so put in 0x
 
   console.log({ sender });
 
-  await entryPoint.depositTo(PM_ADDRESS, {
+  /* await entryPoint.depositTo(PM_ADDRESS, {
     value: await hre.ethers.parseEther("100"),
-  });
+  }); */
 
   const account = await hre.ethers.getContractFactory("Account");
-
+  console.log(address0);
   const userOp = {
     sender, //this is the smart account address and we determine it using the deployer address i.e. factory address
     nonce: await entryPoint.getNonce(sender, 0), //this refers to the nonce managed by the entry point because in SCA, the EOA nonce doesn't matter
     initCode, //is the first 20 bytes of the account factory and the call data passed to the account factory - the "CreateAccount(address)" in the Account.sol
     callData: account.interface.encodeFunctionData("execute"), // is the calldata sent to the SCA - in this case the execute function we created
-    callGasLimit: 200_000,
-    verificationGasLimit: 200_000,
-    preVerificationGas: 50_000,
+    callGasLimit: 500_000,
+    verificationGasLimit: 500_000,
+    preVerificationGas: 200_000,
     maxFeePerGas: hre.ethers.parseUnits("10", "gwei"),
     maxPriorityFeePerGas: hre.ethers.parseUnits("5", "gwei"),
     paymasterAndData: PM_ADDRESS,
-    signature: "0x",
+    signature: signer0.signMessage(hre.ethers.getBytes(hre.ethers.id("week"))),
   };
 
   const tx = await entryPoint.handleOps([userOp], address0);

@@ -126,6 +126,19 @@ account balance on EP 0n
 paymaster balance on Paymaster 399997220466736865757n
 ```
 
+## User validation
+
+```solidity
+  function validateUserOp(UserOperation calldata userOp, bytes32, uint256)
+        external
+        view
+        returns (uint256 validationData)
+    {
+        address recovered = ECDSA.recover(ECDSA.toEthSignedMessageHash(keccak256("week")), userOp.signature);
+        return owner == recovered ? 0 : 1;
+    }
+```
+
 ## HH Compiler settings
 
 ```js
