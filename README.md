@@ -145,6 +145,95 @@ The recovered address :
 The user address (from execute.js) :
 `0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266`
 
+## Signature verification
+
+```solidity
+function validateUserOp(UserOperation calldata userOp, bytes32 userOpHash, uint256)
+        external
+        view
+        returns (uint256 validationData)
+    {
+        address recovered = ECDSA.recover(ECDSA.toEthSignedMessageHash(userOpHash), userOp.signature);
+        return owner == recovered ? 0 : 1;
+    }
+```
+
+In execute.js :
+
+```js
+const userOp = {
+  sender, //this is the smart account address and we determine it using the deployer address i.e. factory address
+  nonce: await entryPoint.getNonce(sender, 0), //this refers to the nonce managed by the entry point because in SCA, the EOA nonce doesn't matter
+  initCode, //is the first 20 bytes of the account factory and the call data passed to the account factory - the "CreateAccount(address)" in the Account.sol
+  callData: account.interface.encodeFunctionData("execute"), // is the calldata sent to the SCA - in this case the execute function we created
+  callGasLimit: 500_000,
+  verificationGasLimit: 500_000,
+  preVerificationGas: 200_000,
+  maxFeePerGas: hre.ethers.parseUnits("10", "gwei"),
+  maxPriorityFeePerGas: hre.ethers.parseUnits("5", "gwei"),
+  paymasterAndData: PM_ADDRESS,
+  signature: "0x",
+};
+
+const userOpHash = await entryPoint.getUserOpHash(userOp);
+userOp.signature = signer0.signMessage(hre.ethers.getBytes(userOpHash));
+```
+
+And in output :
+
+```zsh
+  npx hardhat run scripts/execute.js
+WARNING: You are currently using Node.js v21.5.0, which is not supported by Hardhat. This can lead to unexpected behavior. See https://hardhat.org/nodejs-versions
+
+
+ContractTransactionReceipt {
+  provider: HardhatEthersProvider {
+    _hardhatProvider: LazyInitializationProviderAdapter {
+      _providerFactory: [AsyncFunction (anonymous)],
+      _emitter: [EventEmitter],
+      _initializingPromise: [Promise],
+      provider: [BackwardsCompatibilityProviderAdapter]
+    },
+    _networkName: 'localhost',
+    _blockListeners: [],
+    _transactionHashListeners: Map(0) {},
+    _eventListeners: []
+  },
+  to: '0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512',
+  from: '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266',
+  contractAddress: null,
+  hash: '0x92eec8f897c97e8e2d25a2c7a997d8f9e18f986147adc35a82947e9b86765deb',
+  index: 0,
+  blockHash: '0x5a25d639a3d776c682dcff61f526cf6c1c7396715185d7914081f6c5968b5541',
+  blockNumber: 6,
+  logsBloom: '0x00000000000000000000000010000000000000000000000000000000000000000008000000000000000400010020000010400000000000000000020000000000400000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000008600000000000000000000000000000000002000000000000000000000000000001000000001000000000000000000000000000000000000000000000000000000000000000000000040000000000800000000000000000',
+  gasUsed: 83413n,
+  blobGasUsed: undefined,
+  cumulativeGasUsed: 83413n,
+  gasPrice: 595323719n,
+  blobGasPrice: undefined,
+  type: 2,
+  status: 1,
+  root: undefined
+}
+```
+
+If we change signer :
+
+```diff
+    const userOpHash = await entryPoint.getUserOpHash(userOp);
++   userOp.signature = signer1.signMessage(hre.ethers.getBytes(userOpHash));
+-   userOp.signature = signer0.signMessage(hre.ethers.getBytes(userOpHash));
+```
+
+Then in shell :
+
+```zsh
+npx hardhat run scripts/execute.js
+
+ProviderError: Error: VM Exception while processing transaction: reverted with custom error 'FailedOp(0, "AA24 signature error")'
+```
+
 ## HH Compiler settings
 
 ```js
