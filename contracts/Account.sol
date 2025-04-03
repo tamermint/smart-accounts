@@ -7,6 +7,7 @@ pragma solidity ^0.8.28;
 import "@account-abstraction/contracts/core/EntryPoint.sol";
 import "@account-abstraction/contracts/interfaces/IAccount.sol";
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
+import "@openzeppelin/contracts/utils/Create2.sol";
 
 contract Account is IAccount {
     uint256 public count;
@@ -31,8 +32,26 @@ contract Account is IAccount {
 }
 
 contract AccountFactory {
+    //uint256 amount, bytes32 salt, bytes memory bytecode
+    //implementation notes
+    // - salt we got by typecasting an address to a bytes32 type
+    // - bytecode we got by first getting the account creation code using Solidity's type(contractname).creationCode method
+    //  - then we encodePacked - which removes additional 0 padding and padded it with the owner/deployer address
+    //  - the owner address needs to be padded out to ensure that it gets padded out to 256 bytes.
     function createAccount(address owner) external returns (address) {
-        Account acc = new Account(owner);
-        return address(acc);
+        bytes32 salt = bytes32(uint256(uint160(owner)));
+        bytes memory bytecode = abi.encodePacked(type(Account).creationCode, abi.encode(owner));
+
+        //this is because we want this fucntion to work with the sendercreator method in EntryPoint contract
+        //doing this helps us get the counterfactual address and so we can go lookup this address within the EntryPoint
+        //when we are executing a userOp
+        address addr = Create2.computeAddress(salt, keccak256(bytecode));
+        //so that we get the address if there's code already deployed then we can use this directly rather than us
+        //having to manually calculate the sender address
+        if (addr.code.length > 0) {
+            return addr;
+        }
+
+        return Create2.deploy(0, salt, bytecode);
     }
 }
