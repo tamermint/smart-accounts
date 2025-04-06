@@ -92,6 +92,15 @@ async function main() {
     EP_ADDRESS,
   ]);
 
+  setTimeout(async () => {
+    const transactionHash = await ethers.provider.send(
+      "eth_getUserOperationByHash",
+      [opHash]
+    );
+
+    console.log(transactionHash);
+  }, 5000);
+
   console.log(opHash);
   /* const tx = await entryPoint.handleOps([userOp], address0);
   const receipt = await tx.wait();

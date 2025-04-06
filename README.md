@@ -245,6 +245,38 @@ WARNING: You are currently using Node.js v21.5.0, which is not supported by Hard
 
 ![Arbiscan Snapshot](UserOpSuccess.png)
 
+## UserOp Transaction Hash
+
+```zsh
+  npx hardhat run scripts/execute.js
+WARNING: You are currently using Node.js v21.5.0, which is not supported by Hardhat. This can lead to unexpected behavior. See https://hardhat.org/nodejs-versions
+
+
+{ sender: '0xafb4662db442bc70c4cd3105cd3666a710c42063' }
+0xc2fe2c736560458764a1cb0a54deafa1b6756e8335278b3b1954737d6152b35a
+{
+  userOperation: {
+    sender: '0xaFb4662Db442Bc70c4CD3105Cd3666a710c42063',
+    nonce: '0x2',
+    initCode: '0x',
+    callData: '0x61461954',
+    callGasLimit: '0x2bb8',
+    verificationGasLimit: '0x8a27',
+    preVerificationGas: '0xab54',
+    maxFeePerGas: '0xbebc200',
+    maxPriorityFeePerGas: '0x60e4b0',
+    paymasterAndData: '0x31b3e06d63df7f9f508790ecf9709862fbf736f7',
+    signature: '0x1d654fcbaebaf54c09e8defb143cf12c3ef6449fcc50517201d0f8cf906de8687832cd2366b4bd347420af7105f0c4f658f2177101915d5c0c3b3a204c8e95d41c'
+  },
+  entryPoint: '0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789',
+  blockNumber: '0x853369d',
+  blockHash: '0x2b7cabee9263afcf83e74be8c514e94982bac99b882bd2f96f8a482216e0eed3',
+  transactionHash: '0x747cb8c52c8160485b259ef801710c6bf163c1c73f482adf877af167566601ca'
+}
+```
+
+The sender is the smart account(`0xaFb4662Db442Bc70c4CD3105Cd3666a710c42063`) we deployed. The entryPoint(`'0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789'`) gets called by the bundler (`0x0AbcAB944789Af49481187C47f937B107fceF887`). The smart account gets the message signed by signer0, passes it to the bundler which then sends it to the entryPoint. The entryPoint then uses the handleOps method to execute the callData on the smart account
+
 ## HH Compiler settings
 
 ```js
