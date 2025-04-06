@@ -234,6 +234,17 @@ npx hardhat run scripts/execute.js
 ProviderError: Error: VM Exception while processing transaction: reverted with custom error 'FailedOp(0, "AA24 signature error")'
 ```
 
+## UserOp Hash and Screenshot
+
+```zsh
+npx hardhat run scripts/execute.js
+WARNING: You are currently using Node.js v21.5.0, which is not supported by Hardhat. This can lead to unexpected behavior. See https://hardhat.org/nodejs-versions
+
+0xd9529ab5e0d3b19ad2229f924dc1017396deb86c98f04b8bc4c9c8a6b394b1b7
+```
+
+![Arbiscan Snapshot](UserOpSuccess.png)
+
 ## HH Compiler settings
 
 ```js

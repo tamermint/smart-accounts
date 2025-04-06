@@ -7,17 +7,13 @@ async function main() {
 
   console.log(`Deployed to ${af.target}`);
 
-  const ep = await hre.ethers.deployContract("EntryPoint");
+  /*Entry Point - removed as we are not using our own entry point contract bnut rather defaulting to the v0.6 version of Alchemy's EntryPoint contract */
 
-  await ep.waitForDeployment();
-
-  console.log(`Deployed to ${ep.target}`);
-
-  const pm = await hre.ethers.deployContract("Paymaster");
+  /*   const pm = await hre.ethers.deployContract("Paymaster");
 
   await pm.waitForDeployment();
 
-  console.log(`Deployed to ${pm.target}`);
+  console.log(`Deployed to ${pm.target}`); */
 }
 
 main().catch((error) => {

@@ -3,9 +3,9 @@ const hre = require("hardhat");
 //removed factory nonce and the getCreateAddress we removed it as we are
 //now utilising the senderCreator method in entrypoint to get the sender address
 
-const FACTORY_ADDRESS = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
-const EP_ADDRESS = "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512";
-const PM_ADDRESS = "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0";
+const FACTORY_ADDRESS = "0x9d04E4AF5f8b58EFC56eAd8DEAbd48A8cD692e78";
+const EP_ADDRESS = "0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789";
+const PM_ADDRESS = "0x31B3E06D63df7f9F508790ecF9709862FBF736f7";
 
 async function main() {
   const entryPoint = await hre.ethers.getContractAt("EntryPoint", EP_ADDRESS);
@@ -34,7 +34,7 @@ async function main() {
   try {
     await entryPoint.getSenderAddress(initCode);
   } catch (ex) {
-    sender = "0x" + ex.data.data.slice(-40);
+    sender = "0x" + ex.data.slice(-40);
   }
 
   //now if we already have code at the sender address, we do not need to initialize again
@@ -50,24 +50,52 @@ async function main() {
   const account = await hre.ethers.getContractFactory("Account");
   const userOp = {
     sender, //this is the smart account address and we determine it using the deployer address i.e. factory address
-    nonce: await entryPoint.getNonce(sender, 0), //this refers to the nonce managed by the entry point because in SCA, the EOA nonce doesn't matter
+    nonce: "0x" + (await entryPoint.getNonce(sender, 0)).toString(16), //this refers to the nonce managed by the entry point because in SCA, the EOA nonce doesn't matter
     initCode, //is the first 20 bytes of the account factory and the call data passed to the account factory - the "CreateAccount(address)" in the Account.sol
     callData: account.interface.encodeFunctionData("execute"), // is the calldata sent to the SCA - in this case the execute function we created
-    callGasLimit: 500_000,
-    verificationGasLimit: 500_000,
-    preVerificationGas: 200_000,
-    maxFeePerGas: hre.ethers.parseUnits("10", "gwei"),
-    maxPriorityFeePerGas: hre.ethers.parseUnits("5", "gwei"),
+    /* callGasLimit: "0x",
+    verificationGasLimit: "0x",
+    preVerificationGas: "0x",
+    maxFeePerGas: "0x",
+    maxPriorityFeePerGas: "0x", */
     paymasterAndData: PM_ADDRESS,
-    signature: "0x",
+    signature:
+      "0xfffffffffffffffffffffffffffffff0000000000000000000000000000000007aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1c",
   };
 
-  const userOpHash = await entryPoint.getUserOpHash(userOp);
-  userOp.signature = signer0.signMessage(hre.ethers.getBytes(userOpHash));
+  const response = await ethers.provider.send("eth_estimateUserOperationGas", [
+    userOp,
+    EP_ADDRESS,
+  ]);
 
-  const tx = await entryPoint.handleOps([userOp], address0);
+  const { preVerificationGas, callGasLimit, verificationGasLimit } = response;
+
+  userOp.preVerificationGas = preVerificationGas;
+  userOp.callGasLimit = callGasLimit;
+  userOp.verificationGasLimit = verificationGasLimit;
+
+  const feeData = await hre.ethers.provider.getFeeData();
+  userOp.maxFeePerGas = "0x" + feeData.maxFeePerGas.toString(16);
+
+  const maxPriorityFeePerGas = await ethers.provider.send(
+    "rundler_maxPriorityFeePerGas"
+  );
+
+  userOp.maxPriorityFeePerGas = maxPriorityFeePerGas;
+
+  const userOpHash = await entryPoint.getUserOpHash(userOp);
+
+  userOp.signature = await signer0.signMessage(hre.ethers.getBytes(userOpHash));
+
+  const opHash = await ethers.provider.send("eth_sendUserOperation", [
+    userOp,
+    EP_ADDRESS,
+  ]);
+
+  console.log(opHash);
+  /* const tx = await entryPoint.handleOps([userOp], address0);
   const receipt = await tx.wait();
-  console.log(receipt);
+  console.log(receipt); */
 }
 
 main().catch((error) => {
